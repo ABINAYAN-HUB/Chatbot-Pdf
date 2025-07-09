@@ -7,3 +7,4 @@ langchain_core
 faiss-cpu
 python-dotenv
 pypdf
+sentence-transformers
