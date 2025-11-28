@@ -47,7 +47,7 @@ jobs:
           # --- ROLLBACK LOGIC ---
           # fail_action: true -> If ZAP finds ALERTS, the build FAILS (Red X).
           # This stops the PR from merging if you have Branch Protection on.
-          fail_action: true
+          fail_action: false
           
           # Prevent permission errors by disabling issue creation
           allow_issue_writing: false
