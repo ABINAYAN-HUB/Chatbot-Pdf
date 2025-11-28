@@ -1,0 +1,25 @@
+name: ZAP Scheduled Full Scan (DAST)
+
+on:
+  # Runs every day at 01:00 UTC
+  schedule:
+    - cron: '0 1 * * *'
+  # Allows manual run from GitHub Actions
+  workflow_dispatch:
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+    name: Daily ZAP Full Scan
+
+    steps:
+      - name: ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.13.0
+        with:
+          # Default target (you will change later when needed)
+          target: 'https://www.zaproxy.org/'
+          # Fail workflow only on serious vulnerabilities
+          fail_action: true
+          # Avoid automatic GitHub issue creation
+          allow_issue_writing: false
+          token: ${{ secrets.GITHUB_TOKEN }}
