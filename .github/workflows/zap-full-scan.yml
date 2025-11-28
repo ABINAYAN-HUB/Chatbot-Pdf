@@ -1,10 +1,12 @@
-name: ZAP Full Scan (DAST)
+name: ZAP Full Scan (DAST) CI
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   zap_full_scan:
@@ -30,13 +32,11 @@ jobs:
           python -m streamlit run app.py --server.headless true --server.port 8501 &
           sleep 60
 
-      # Full active scan by ZAP
+      # Full active scan by ZAP against your app
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.13.0
         with:
           target: "http://localhost:8501"
-          # Do NOT create/update GitHub issues (avoids 'resource not accessible' error)
-          allow_issue_writing: false
-          # Fail the pipeline if ZAP finds any alerts
-          fail_action: true
+          fail_action: true          # pipeline fails if ZAP finds alerts
+          allow_issue_writing: false # don't try to open GitHub issues
           token: ${{ secrets.GITHUB_TOKEN }}
