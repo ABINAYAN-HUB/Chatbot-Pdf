@@ -11,32 +11,46 @@ on:
 jobs:
   zap_full_scan:
     runs-on: ubuntu-latest
-
+    name: Scan the webapplication
     steps:
-      - name: Checkout repository
+      # 1. Checkout the repository code
+      - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Set up Python environment
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.9'
 
+      # 3. Install dependencies (Streamlit, etc.)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f app.py ]; then pip install streamlit; fi
 
-      # Start your Streamlit app so ZAP can attack it
-      - name: Start Streamlit App
+      # 4. Start the App in the background
+      # ZAP needs a running server to attack. We use '&' to run it in the background.
+      - name: Run Streamlit app in background
         run: |
           python -m streamlit run app.py --server.headless true --server.port 8501 &
-          sleep 60
+          # Wait 10 seconds to ensure the app is fully loaded before scanning
+          sleep 10
 
-      # Full active scan by ZAP against your app
+      # 5. Run ZAP Full Scan
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.13.0
         with:
           target: "http://localhost:8501"
-          fail_action: true          # pipeline fails if ZAP finds alerts
-          allow_issue_writing: false # don't try to open GitHub issues
+          
+          # --- ROLLBACK LOGIC ---
+          # fail_action: true -> If ZAP finds ALERTS, the build FAILS (Red X).
+          # This stops the PR from merging if you have Branch Protection on.
+          fail_action: true
+          
+          # Prevent permission errors by disabling issue creation
+          allow_issue_writing: false
+          
+          # Standard token
           token: ${{ secrets.GITHUB_TOKEN }}
