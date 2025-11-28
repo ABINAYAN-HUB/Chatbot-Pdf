@@ -1,9 +1,5 @@
 name: ZAP Full Scan (DAST)
 
-permissions:
-  contents: write
-  actions: write
-
 on:
   push:
     branches:
@@ -13,12 +9,6 @@ on:
 jobs:
   zap_full_scan:
     runs-on: ubuntu-latest
-
-    services:
-      zap:
-        image: owasp/zap2docker-stable
-        ports:
-          - 8501:8501
 
     steps:
       - name: Checkout repository
@@ -34,22 +24,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Start your Streamlit app so ZAP can attack it
       - name: Start Streamlit App
         run: |
           python -m streamlit run app.py --server.headless true --server.port 8501 &
           sleep 60
 
+      # Full active scan by ZAP
       - name: Run ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.7.0
+        uses: zaproxy/action-full-scan@v0.13.0
         with:
           target: "http://localhost:8501"
+          # Do NOT create/update GitHub issues (avoids 'resource not accessible' error)
+          allow_issue_writing: false
+          # Fail the pipeline if ZAP finds any alerts
           fail_action: true
-          cmd_options: "-m 1"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload ZAP Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-full-report
-          path: zap_report.html
+          token: ${{ secrets.GITHUB_TOKEN }}
